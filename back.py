@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.optimize as opt
 
 g_na = 120
 gk = 36
@@ -74,6 +75,78 @@ def EulerForward(Vm_0,h_0,m_0,n_0,t,h,phi,I):
         nEulerFor[i] = nEulerFor[i-1] + h * nFun(VmEulerFor[i-1],nEulerFor[i-1],phi)
 
     return VmEulerFor
+
+# x : Parametros en la posicion presente
+# y1 : Vm anterior
+# y2 : h anterior
+# y3 : m anterior
+# y4 : n anterior
+def FEulerBack(x,y1,y2,y3,y4,I,phi,h):
+    return[y1 + h * Vm(I,x[0],x[3],x[2],x[1]) - x[0],
+           y2 + h * hFun(x[0],x[1],phi) - x[1],
+           y3 + h * mFun(x[0],x[2],phi) - x[2],
+           y4 + h * nFun(x[0],x[3],phi) - x[3]]
+
+# Metodo Euler Backward
+def EulerBackward(Vm_0,h_0,m_0,n_0,t,h,phi,I):
+    # Se crean los arreglos para guardar los resultados de las iteraciones
+    VmEulerBack = np.zeros(len(t))
+    hEulerBack = np.zeros(len(t))
+    mEulerBack = np.zeros(len(t))
+    nEulerBack = np.zeros(len(t))
+
+    # Se agregan los valores iniciales
+    VmEulerBack[0] = Vm_0
+    hEulerBack[0] = h_0
+    mEulerBack[0] = m_0
+    nEulerBack[0] = n_0
+
+    for i in range(1, len(t)):
+        SolBack = opt.fsolve(FEulerBack,
+                             np.array([VmEulerBack[i-1],hEulerBack[i-1],mEulerBack[i-1],nEulerBack[i-1]]),(VmEulerBack[i - 1], hEulerBack[i - 1], mEulerBack[i - 1], nEulerBack[i - 1], I[i], phi, h),xtol=10**-15)
+        VmEulerBack[i] = SolBack[0]
+        hEulerBack[i] = SolBack[1]
+        mEulerBack[i] = SolBack[2]
+        nEulerBack[i] = SolBack[3]
+
+    return VmEulerBack
+
+# x : Parametros en la posicion presente
+# y1 : Vm anterior
+# y2 : h anterior
+# y3 : m anterior
+# y4 : n anterior
+def FEulerMod(x,y1,y2,y3,y4,I,phi,h):
+    return[y1 + (h/2.0) * (Vm(I,y1,y4,y3,y2) + Vm(I,x[0],x[3],x[2],x[1])) - x[0],
+           y2 + (h/2.0) * (hFun(y1,y2,phi) + hFun(x[0],x[1],phi)) - x[1],
+           y3 + (h/2.0) * (mFun(y1,y3,phi) + mFun(x[0],x[2],phi)) - x[2],
+           y4 + (h/2.0) * (nFun(y1,y4,phi) + nFun(x[0],x[3],phi)) - x[3]]
+
+# Metodo Euler Modificado
+def EulerMod(Vm_0,h_0,m_0,n_0,t,h,phi,I):
+    # Se crean los arreglos para guardar los resultados de las iteraciones
+    VmEulerMod = np.zeros(len(t))
+    hEulerMod = np.zeros(len(t))
+    mEulerMod = np.zeros(len(t))
+    nEulerMod = np.zeros(len(t))
+
+    # Se agregan los valores iniciales
+    VmEulerMod[0] = Vm_0
+    hEulerMod[0] = h_0
+    mEulerMod[0] = m_0
+    nEulerMod[0] = n_0
+
+    for i in range(1,len(t)):
+        SolMod = opt.fsolve(FEulerMod,
+                            np.array([VmEulerMod[i-1],hEulerMod[i-1],mEulerMod[i-1],nEulerMod[i-1]]),
+                            (VmEulerMod[i-1],hEulerMod[i-1],mEulerMod[i-1],nEulerMod[i-1],I[i],phi,h),
+                            xtol=10**-15)
+        VmEulerMod[i] = SolMod[0]
+        hEulerMod[i] = SolMod[1]
+        mEulerMod[i] = SolMod[2]
+        nEulerMod[i] = SolMod[3]
+
+    return VmEulerMod
 
 # Metodo Renge-Kutta de 2do orden
 def RK2(Vm_0,h_0,m_0,n_0,t,h,phi,I):
@@ -205,21 +278,23 @@ V0 = -65
 T = 6.3
 Phi = Phi(T)
 # Corriente
-I = np.zeros(np.size(t))
-r = np.where((t >= to) & (t <= tf))
+I = 20.0 * np.ones(np.size(t))
+'''I = np.zeros(np.size(t))
+r = np.where((t >= to) & (t <= 50))
 I[r] = 120
-#r = np.where((t >= 50) & (t <= tf))
-#I[r] = 120
+r = np.where((t >= 50) & (t <= tf))
+I[r] = 120'''
 
 # Grafica
 plt.figure()
 plt.plot(t, EulerForward(V0,h0,m0,n0,t,h,Phi,I), "r")
-#plt.plot(t, EulerBackward(V0,h0,m0,n0,t,h,Phi,I), "g")
-#plt.plot(t, EulerMod(V0,h0,m0,n0,t,h,Phi,I), "m")
+plt.plot(t, EulerBackward(V0,h0,m0,n0,t,h,Phi,I), "g")
+plt.plot(t, EulerMod(V0,h0,m0,n0,t,h,Phi,I), "m")
 plt.plot(t, RK2(V0,h0,m0,n0,t,h,Phi,I), "orange")
 plt.plot(t, RK4(V0,h0,m0,n0,t,h,Phi,I), "maroon")
 plt.xlabel("t", fontsize=15)
+plt.ylabel("V", fontsize=15)
 plt.legend(["EulerFor","RK2","RK4"], fontsize=12)
-#plt.legend(["EulerFor","EulerBackRoot","EulerModRoot","RK2","RK4"], fontsize=12)
+plt.legend(["EulerFor","EulerBackRoot","EulerModRoot","RK2","RK4"], fontsize=12)
 plt.grid(1)
 plt.show()
