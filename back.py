@@ -261,17 +261,17 @@ plt.show()
 # Definimos un valor para h
 h = 0.01
 # Definimos el tiempo inicial
-to = 10.0
+to = 0.0
 # Definimos el tiempo final
-tf = 100.0
+tf = 40.0
 # Creamos un arreglo de tiempo con pasos de h
 t = np.arange(to, tf + h, h)
 # h inicial
-h0 = 0.8
+h0 = 0.65
 # m inicial
 m0 = 0.05
 # n inicial
-n0 = 0.4
+n0 = 0.3
 # V inicial
 V0 = -65
 # Temperatura
