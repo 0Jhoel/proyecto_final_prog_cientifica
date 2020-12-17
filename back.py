@@ -11,7 +11,7 @@ e_l = -54.4
 
 # Beta de la funcion activacion del canal de sodio
 def Bm(V):
-    return 4 * np.exp(-(V + 65)/10)
+    return 4 * np.exp(-(V + 65)/18)
 
 # Alfa de la funcion de inactivacion del canal de sodio
 def Ah(V):
@@ -23,7 +23,7 @@ def Bh(V):
 
 # Alfa de la funcion de la probabilidad de que canal de potacio este abierto
 def An(V):
-    return 0.01 * (V + 55)/(1 - np.exp(-(V + 55)/10))
+    return 0.01 * (V + 55)/(1.0 - np.exp(-(V + 55)/10))
 
 # Beta de la funcion de la probabilidad de que canal de potacio este abierto
 def Bn(V):
@@ -31,7 +31,7 @@ def Bn(V):
 
 # Alfa de la funcion de activacion del canal de sodio
 def Am(V):
-    return 0.1 * (V + 40)/(1 + np.exp(-(V + 40)/10))
+    return 0.1 * (V + 40)/(1 - np.exp(-(V + 40)/10))
 
 # Factor de temperatura
 def Phi(T):
@@ -263,7 +263,7 @@ h = 0.01
 # Definimos el tiempo inicial
 to = 0.0
 # Definimos el tiempo final
-tf = 40.0
+tf = 100.0
 # Creamos un arreglo de tiempo con pasos de h
 t = np.arange(to, tf + h, h)
 # h inicial
@@ -278,12 +278,12 @@ V0 = -65
 T = 6.3
 Phi = Phi(T)
 # Corriente
-I = 120.0 * np.ones(np.size(t))
-'''I = np.zeros(np.size(t))
+'''I = 120.0 * np.ones(np.size(t))'''
+I = np.zeros(np.size(t))
 r = np.where((t >= to) & (t <= 50))
-I[r] = 120
+I[r] = 50
 r = np.where((t >= 50) & (t <= tf))
-I[r] = 120'''
+I[r] = 120
 
 # Grafica
 plt.figure()
