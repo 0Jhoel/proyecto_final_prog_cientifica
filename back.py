@@ -8,85 +8,166 @@ e_na = 50
 e_k = -77
 e_l = -54.4
 
-def beta_n(v):
-    return 0.125*np.exp((v+65)/(-80))
+# Beta de la funcion activacion del canal de sodio
+def Bm(V):
+    return 4 * np.exp(-(V + 65)/10)
 
-def alfa_n(v):
-    return 0.01*(v+55)/(1-np.exp((v+55)/(-10)))
+# Alfa de la funcion de inactivacion del canal de sodio
+def Ah(V):
+    return 0.07 * np.exp(-(V + 65)/20)
 
-def beta_m(v):
-    return 4*np.exp((v+65)/(-18))
+# Beta de la funcion de inactivacion del canal de sodio
+def Bh(V):
+    return 1/(1 + np.exp(-(V + 35)/10))
 
-def alfa_m(v):
-    return 0.1*(v+40)/(1-np.exp((v+40)/(-10)))
+# Alfa de la funcion de la probabilidad de que canal de potacio este abierto
+def An(V):
+    return 0.01 * (V + 55)/(1 - np.exp(-(V + 55)/10))
 
-def beta_h(v):
-    return 1/(1+np.exp((v+35)/(-10)))
+# Beta de la funcion de la probabilidad de que canal de potacio este abierto
+def Bn(V):
+    return 0.125 * np.exp(-(V + 65)/80)
 
-def alfa_h(v):
-    return 0.07*np.exp((v+65)/(-20))
+# Alfa de la funcion de activacion del canal de sodio
+def Am(V):
+    return 0.1 * (V + 40)/(1 + np.exp(-(V + 40)/10))
 
-def phi(temp):
-    return 3**((temp-6.3)/10)
+# Factor de temperatura
+def Phi(T):
+    return 3 ** ((T-6.3)/10)
 
-def dv(I,v,n,m,h):
-    return I - gl*(v-e_l) - gk*(n**4)*(v-e_k)-(g_na*(m**3)*h*(v-e_na))
+# Probabilidad de inactivacion del canal de sodio
+def hFun(V,h,phi):
+    return phi * (Ah(V) * (1.0 - h) - Bh(V) * h)
 
-def dn(temp,v,n):
-    return phi(temp)*(alfa_n(v)*(1-n)-beta_n(v)*n)
+# Probabilidad de activacion del canal de sodio
+def mFun(V,m,phi):
+    return phi * (Am(V) * (1.0 - m) - Bm(V) * m)
 
-def dm(temp,v,m):
-    return phi(temp)*(alfa_m(v)*(1-m)-beta_m(v)*m)
+# Probabilidad del canal de potacio de estar abierto
+def nFun(V,n,phi):
+    return phi * (An(V) * (1.0 - n) - Bn(V) * n)
 
-def dh(temp,v,h):
-    return phi(temp)*(alfa_h(v)*(1-h)-beta_h(v)*h)
+# Funcion de potencial de membrana
+def Vm(I,V,n,m,h):
+    return I - (gl * (V - e_l) + gk * (n ** 4) * (V - e_k) + g_na * h * (m ** 3) * (V - e_na))
 
-def funcion(t,vals):
-    #dónde va t?
-    v = vals[0]
-    n = vals[1]
-    m = vals[2]
-    h = vals[3]
-    return np.array([ dv(20,v,n,m,h),
-             dn(10,v,n),
-             dm(10,v,m),
-             dh(10,v,h)])
+# Metodo Euler Forward
+def EulerForward(Vm_0,h_0,m_0,n_0,t,h,phi,I):
+    # Se crean los arreglos para guardar los resultados de las iteraciones
+    VmEulerFor = np.zeros(len(t))
+    hEulerFor = np.zeros(len(t))
+    mEulerFor = np.zeros(len(t))
+    nEulerFor = np.zeros(len(t))
 
-#Métodos de solución
-def iter_RK2(h,fun,v0,n0,m0,h0):
-
-    to = 0.0
-    tf = 500.0
-    t = np.arange(to, tf + h, h)
-
-    y_rk2 = np.zeros((np.size(t),4))
-    y_rk2[0] = np.array([v0,n0,m0,h0])
-    #constantes
-    c = {'p':1,'q':1 ,'c1':0.5,'c2':0.5}
-
-    for i in range(1,len(t)):
-        k1 = fun(t[i - 1], y_rk2[i - 1])
-        k2 = fun(t[i - 1] + h*c['p'], y_rk2[i - 1] + k1 * h * c['q'])
-        y_rk2[i] = y_rk2[i-1] + h *( c['c1']*k1 + c['c2']*k2)
-    return t,y_rk2
-
-def iter_RK4(h,fun,v0,n0,m0,h0):
-    to = 0.0
-    tf = 500.0
-    t = np.arange(to, tf + h, h)
-
-    y_rk4 = np.zeros((np.size(t),4))
-    y_rk4[0] = np.array([v0,n0,m0,h0])
-    #constantes
-    c={'p2' : 0.5, 'p3' : 0.5, 'q21' : 0.5, 'q31' : 0, 'q32' : 0.5, 'p4':1,'q41': 0, 'q42': 0,'q43': 1,'c1' : 1/6,'c2': 1/3,'c3': 1/3,'c4': 1/6}
+    # Se agregan los valores iniciales
+    VmEulerFor[0] = Vm_0
+    hEulerFor[0] = h_0
+    mEulerFor[0] = m_0
+    nEulerFor[0] = n_0
 
     for i in range(1,len(t)):
-        k1 = fun(t[i - 1], y_rk4[i - 1])
-        k2 = fun(t[i - 1] + c['p2']*h, y_rk4[i - 1] + c['q21']* k1 * h)
-        k3 = fun(t[i - 1] + c['p3']*h, y_rk4[i - 1] + c['q31']* k1 * h + c['q32']* k2 * h)
-        k4 = fun(t[i - 1] + c['p4']*h, y_rk4[i - 1] + c['q41']* k1 * h + c['q42']* k2 * h + c['q43']*k3*h)
-        y_rk4[i] = y_rk4[i-1] + h*(c['c1']*k1 + c['c2']*k2 + c['c3']*k3 + c['c4']*k4)
-    return t,y_rk4
+        VmEulerFor[i] = VmEulerFor[i-1] + h * Vm(I[i],VmEulerFor[i-1],nEulerFor[i-1],mEulerFor[i-1],
+                                                 hEulerFor[i-1])
+        hEulerFor[i] = hEulerFor[i-1] + h * hFun(VmEulerFor[i-1],hEulerFor[i-1],phi)
+        mEulerFor[i] = mEulerFor[i-1] + h * mFun(VmEulerFor[i-1],mEulerFor[i-1],phi)
+        nEulerFor[i] = nEulerFor[i-1] + h * nFun(VmEulerFor[i-1],nEulerFor[i-1],phi)
+
+    return VmEulerFor
+
+# Metodo Renge-Kutta de 2do orden
+def RK2(Vm_0,h_0,m_0,n_0,t,h,phi,I):
+    # Se crean los arreglos para guardar los resultados de las iteraciones
+    VmRK2 = np.zeros(len(t))
+    hRK2 = np.zeros(len(t))
+    mRK2 = np.zeros(len(t))
+    nRK2 = np.zeros(len(t))
+
+    # Se agregan los valores iniciales
+    VmRK2[0] = Vm_0
+    hRK2[0] = h_0
+    mRK2[0] = m_0
+    nRK2[0] = n_0
+
+    for i in range(1,len(t)):
+        # Para Vm: k11, k21
+        # Para n: k12, k22
+        # Para m: k13, k23
+        # Para h: k14, k24
+
+        # k1 = F(t_(i - 1), y_(i - 1))
+        k11 = Vm(I[i],VmRK2[i - 1],nRK2[i - 1],mRK2[i - 1],hRK2[i - 1])
+        k12 = nFun(VmRK2[i - 1],nRK2[i - 1],phi)
+        k13 = mFun(VmRK2[i - 1],mRK2[i - 1],phi)
+        k14 = hFun(VmRK2[i - 1],hRK2[i - 1],phi)
+
+        # k2 = F(t_(i - 1) + h, y_(i - 1) + hk1)
+        k21 = Vm(I[i], VmRK2[i - 1] + h * k11, nRK2[i - 1] + h *k12, mRK2[i - 1] + h * k13, hRK2[i - 1] + h * k14)
+        k22 = nFun(VmRK2[i - 1] + h * k11, nRK2[i - 1] + h * k12, phi)
+        k23 = mFun(VmRK2[i - 1] + h * k11, mRK2[i - 1] + h * k13, phi)
+        k24 = hFun(VmRK2[i - 1] + h * k11, hRK2[i - 1] + h * k14, phi)
+
+        # y_i = y_(i-1) + (h / 2)(k1 + k2)
+        VmRK2[i] = VmRK2[i - 1] + (h / 2) * (k11 + k21)
+        nRK2[i] = nRK2[i - 1] + (h / 2) * (k12 + k22)
+        mRK2[i] = mRK2[i - 1] + (h / 2) * (k13 + k23)
+        hRK2[i] = hRK2[i - 1] + (h / 2) * (k14 + k24)
+
+    return VmRK2
+
+# Metodo Renge-Kutta de 4to orden
+def RK4(Vm_0,h_0,m_0,n_0,t,h,phi,I):
+    # Se crean los arreglos para guardar los resultados de las iteraciones
+    VmRK4 = np.zeros(len(t))
+    hRK4 = np.zeros(len(t))
+    mRK4 = np.zeros(len(t))
+    nRK4 = np.zeros(len(t))
+
+    # Se agregan los valores iniciales
+    VmRK4[0] = Vm_0
+    hRK4[0] = h_0
+    mRK4[0] = m_0
+    nRK4[0] = n_0
+
+    for i in range(1, len(t)):
+        # Para Vm: k11, k21, k31, k41
+        # Para n: k12, k22, k32, k42
+        # Para m: k13, k23, k33, k43
+        # Para h: k14, k24, k34, k44
+
+        # k1 = F(t_(i-1), y_(i-1))
+        k11 = Vm(I[i], VmRK4[i - 1], nRK4[i - 1], mRK4[i - 1], hRK4[i - 1])
+        k12 = nFun(VmRK4[i - 1], nRK4[i - 1], phi)
+        k13 = mFun(VmRK4[i - 1], mRK4[i - 1], phi)
+        k14 = hFun(VmRK4[i - 1], hRK4[i - 1], phi)
+
+        # k2 = F(t_(i - 1) + 0.5h, y_(i - 1) + 0.5k1h)
+        k21 = Vm(I[i], VmRK4[i - 1] + 0.5 * h * k11, nRK4[i - 1] + 0.5 * h * k12, mRK4[i - 1] + 0.5 * h * k13,
+                 hRK4[i - 1] + 0.5 * h * k14)
+        k22 = nFun(VmRK4[i - 1] + 0.5 * h * k11, nRK4[i - 1] + 0.5 * h * k12, phi)
+        k23 = mFun(VmRK4[i - 1] + 0.5 * h * k11, mRK4[i - 1] + 0.5 * h * k13, phi)
+        k24 = hFun(VmRK4[i - 1] + 0.5 * h * k11, hRK4[i - 1] + 0.5 * h * k14, phi)
+
+        # k3 = F(t_(i - 1) + 0.5h, y_(i - 1) + 0.5k2h)
+        k31 = Vm(I[i], VmRK4[i - 1] + 0.5 * h * k21, nRK4[i -1] + 0.5 * h * k22, mRK4[i - 1] + 0.5 * h * k23,
+                 hRK4[i - 1] + 0.5 * h * k24)
+        k32 = nFun(VmRK4[i - 1] + 0.5 * h * k21, nRK4[i - 1] + 0.5 * h * k22, phi)
+        k33 = mFun(VmRK4[i - 1] + 0.5 * h * k21, mRK4[i - 1] + 0.5 * h * k23, phi)
+        k34 = hFun(VmRK4[i - 1] + 0.5 * h * k21, hRK4[i - 1] + 0.5 * h * k24, phi)
+
+        # k4 = F(t_(i - 1) + h, y_(i - 1) + k3h)
+        k41 = Vm(I[i], VmRK4[i - 1] + h * k31, nRK4[i - 1] + h * k32, mRK4[i - 1] + h * k33, hRK4[i - 1] + h * k34)
+        k42 = nFun(VmRK4[i - 1] + h * k31, nRK4[i - 1] + h * k32, phi)
+        k43 = mFun(VmRK4[i - 1] + h * k31, mRK4[i - 1] + h * k33, phi)
+        k44 = hFun(VmRK4[i - 1] + h * k31, hRK4[i - 1] + h * k34, phi)
+
+        # y_i = y_(i-1)
+        VmRK4[i] = VmRK4[i - 1] + (h / 6) * (k11 + 2 * k21 + 2 * k31 + k41)
+        nRK4[i] = nRK4[i - 1] + (h / 6) * (k12 + 2 * k22 + 2 * k32 + k42)
+        mRK4[i] = mRK4[i - 1] + (h / 6) * (k13 + 2 * k23 + 2 * k33 + k43)
+        hRK4[i] = hRK4[i - 1] + (h / 6) * (k14 + 2 * k24 + 2 * k34 + k44)
+
+    return VmRK4
 
 """
 Esto es para probar
@@ -102,3 +183,43 @@ plt.xlabel("t")
 plt.ylabel("$V(t)$")
 plt.show()
 """
+
+# Setup inicial
+# Definimos un valor para h
+h = 0.01
+# Definimos el tiempo inicial
+to = 10.0
+# Definimos el tiempo final
+tf = 100.0
+# Creamos un arreglo de tiempo con pasos de h
+t = np.arange(to, tf + h, h)
+# h inicial
+h0 = 0.6
+# m inicial
+m0 = 0.2
+# n inicial
+n0 = 0.4
+# V inicial
+V0 = -65
+# Temperatura
+T = 6.3
+Phi = Phi(T)
+# Corriente
+I = np.zeros(np.size(t))
+r = np.where((t >= to) & (t <= 50))
+I[r] = 20
+r = np.where((t >= 50) & (t <= tf))
+I[r] = 120
+
+# Grafica
+plt.figure()
+plt.plot(t, EulerForward(V0,h0,m0,n0,t,h,Phi,I), "r")
+#plt.plot(t, EulerBackward(V0,h0,m0,n0,t,h,Phi,I), "g")
+#plt.plot(t, EulerMod(V0,h0,m0,n0,t,h,Phi,I), "m")
+plt.plot(t, RK2(V0,h0,m0,n0,t,h,Phi,I), "orange")
+plt.plot(t, RK4(V0,h0,m0,n0,t,h,Phi,I), "maroon")
+plt.xlabel("t", fontsize=15)
+plt.legend(["EulerFor","RK2","RK4"], fontsize=12)
+#plt.legend(["EulerFor","EulerBackRoot","EulerModRoot","RK2","RK4"], fontsize=12)
+plt.grid(1)
+plt.show()
