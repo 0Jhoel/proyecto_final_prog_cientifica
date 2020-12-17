@@ -194,9 +194,9 @@ tf = 100.0
 # Creamos un arreglo de tiempo con pasos de h
 t = np.arange(to, tf + h, h)
 # h inicial
-h0 = 0.6
+h0 = 0.8
 # m inicial
-m0 = 0.2
+m0 = 0.05
 # n inicial
 n0 = 0.4
 # V inicial
@@ -206,10 +206,10 @@ T = 6.3
 Phi = Phi(T)
 # Corriente
 I = np.zeros(np.size(t))
-r = np.where((t >= to) & (t <= 50))
-I[r] = 20
-r = np.where((t >= 50) & (t <= tf))
+r = np.where((t >= to) & (t <= tf))
 I[r] = 120
+#r = np.where((t >= 50) & (t <= tf))
+#I[r] = 120
 
 # Grafica
 plt.figure()
