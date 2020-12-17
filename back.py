@@ -278,7 +278,7 @@ V0 = -65
 T = 6.3
 Phi = Phi(T)
 # Corriente
-I = 20.0 * np.ones(np.size(t))
+I = 120.0 * np.ones(np.size(t))
 '''I = np.zeros(np.size(t))
 r = np.where((t >= to) & (t <= 50))
 I[r] = 120
