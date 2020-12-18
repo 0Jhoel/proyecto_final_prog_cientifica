@@ -3,9 +3,11 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 import numpy as np
-from Proyecto.ecuaciones import *
+from back import *
 
 #VALORES INICIALES DE LOS PARÁMETROS
+
+
 hp = 0.01
 to1 = 10.0
 tf1 = 50.0
