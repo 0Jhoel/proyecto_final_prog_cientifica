@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 import numpy as np
 from Proyecto.ecuaciones import *
 
+#VALORES INICIALES DE LOS PARÁMETROS
 hp = 0.01
 to1 = 10.0
 tf1 = 50.0
@@ -18,8 +19,8 @@ T0 = 6.3
 I1 = 50
 I2 = 120
 
+#Limpia todos los widgets de un frame, se usa para limpiar el plot
 def clearFrame(frame):
-    # destroy all widgets from frame
     for widget in frame.winfo_children():
        widget.destroy()
 
@@ -41,20 +42,16 @@ def habInter():
     entr_intervalo_1_1.configure(state=tk.NORMAL)
     entr_intensidad_1.configure(state=tk.NORMAL)
 
+#Grafica un plot vacio (el inicial)
 def plotd(master_frame):
-    # the figure that will contain the plot
+    # Figura que contendrá el plot
     fig = Figure(figsize=(5, 3), dpi=100)
-
-    # Función super básica que se va a mostrar mientras tanto
-    #x = [i for i in range(101)]
-    #y = [i ** 2 for i in range(101)]
 
     # se crea el plot
     plot1 = fig.add_subplot(111)
     y = []
     x = []
     plot1.plot(x,y)
-    plt.close()
     # Esto es para agregar el plot a la interfaz
     canvas = FigureCanvasTkAgg(fig, master=master_frame)
     canvas.draw()
@@ -66,32 +63,37 @@ def plotd(master_frame):
 # metodo de donde sale la gráfica con la función
 def plot(master_frame, V, m, h, n, t, I, phi):
     clearFrame(master_frame)
-    # the figure that will contain the plot
+    #la figura que contendrá el the plot
     fig = Figure(figsize=(5, 3), dpi=100)
-
-    # Función super básica que se va a mostrar mientras tanto
-    #x = [i for i in range(101)]
-    #y = [i ** 2 for i in range(101)]
 
     # se crea el plot
     plot1 = fig.add_subplot(111)
+    lista_metodos = []
     if v_eulerfwd.get():
+        lista_metodos.append("Euler Forward")
         y1 = EulerForward(V,h,m,n,t,0.01,phi,I)
         plot1.plot(t,y1)
     if v_eulerback.get():
+        lista_metodos.append("Euler Backward")
         y2 = EulerBackward(V,h,m,n,t,0.01,phi,I)
         plot1.plot(t, y2)
     if v_eulermod.get():
+        lista_metodos.append("Euler Modificado")
         y3 = EulerMod(V,h,m,n,t,0.01,phi,I)
         plot1.plot(t, y3)
     if v_rk2.get():
+        lista_metodos.append("RK2")
         y4 = RK2(V,h,m,n,t,0.01,phi,I)
         plot1.plot(t, y4)
     if v_rk4.get():
+        lista_metodos.append("RK4")
         y5 = RK4(V,h,m,n,t,0.01,phi,I)
         plot1.plot(t, y5)
-    #plot1.plot(x, y)
-    plt.close()
+    if v_odeint.get():
+        lista_metodos.append("Odeint")
+        y6 = funcion_odeint(V,m,h,n, t,phi,I)
+        plot1.plot(t, y6)
+    plot1.legend(lista_metodos)
     # Esto es para agregar el plot a la interfaz
     canvas = FigureCanvasTkAgg(fig, master=master_frame)
     canvas.draw()
@@ -119,6 +121,7 @@ def pri():
     tipo = vc.get()
 
     if tipo == 1:
+
         try:
             to2 = float(entr_intervalo_2_0.get())
             tf2 = float(entr_intervalo_2_1.get())
@@ -131,10 +134,10 @@ def pri():
 
             t = np.arange(to2,tf2+hp,hp)
             I = I2 * np.ones(np.size(t))
-            phi = Phi(T0)
 
+            #phi = Phi(T0)
+            phi = 1
             plot(frame_grafica, V0,m0,h0,n0,t,I,phi)
-
         except:
             print('Error en los parametros')
     else:
@@ -164,23 +167,40 @@ def pri():
         except:
             print('Error en los parametros')
 
+
+#ventana
 root = tk.Tk()
+
+#método para cerrar ventana
+def salir():
+    root.destroy()
+
+# Le asigna un tamaño a la ventana inicial
 width = 1020
-height = 680
+height = 660
 root.geometry(str(width) + "x" + str(height))  # dimensiones de la ventana
 
+#Construye el frame de la izquierda (contiene el título y los parámetros)
 frame_izquierda = tk.Frame(root, background="#ffffff", height=height)
 frame_izquierda.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
 root.grid_columnconfigure(0, weight=4)
 root.grid_columnconfigure(1, weight=0)
 
+
+#Pertenece al frame de la izquierda, contiene el título del proyecto y el botón salir
 frame_titulo = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.3)
 frame_titulo.pack(fill='both')
+#Botón salir
+b_salir = tk.Button(frame_titulo,text="Salir",background="#ffffff",borderwidth=1,command=salir)
+b_salir.pack(anchor=tk.W)
+#Título del proyecto
+photo_titulo = tk.PhotoImage(file="images/titulo_general.png")#fuente de la imagen: https://pngtree.com/freepng/neuron-icon-for-your-project_4864040.html
+label_titulo = tk.Label(frame_titulo, background="#ffffff", image = photo_titulo)
+label_titulo.pack()
 
-# Frame con el título de los parámetros
+#Pertenece al frame de la izquierda, contiene el título 'Parámetros'
 frame_parametros_titulo = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.03)
 frame_parametros_titulo.pack(fill='both')
-
 label_rk = tk.Label(frame_parametros_titulo, text="Parámetros", font=("Leelawadee UI", 20), background="#ffffff")
 label_rk.pack(anchor=tk.W)
 
@@ -188,7 +208,7 @@ label_rk.pack(anchor=tk.W)
 frame_parametros = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.3)  # funciona con grid
 frame_parametros2 = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.16)  # funciona con pack
 frame_parametros3 = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.1)  # funciona con grid
-frame_boton_parametros = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.11)  # funciona con grid
+frame_boton_parametros = tk.Frame(frame_izquierda, background="#ffffff", height=height * 0.11)  # funciona con pack
 
 # se llena el primer frame_parametros
 frame_parametros.pack(fill='both')
@@ -196,6 +216,7 @@ frame_parametros2.pack(fill='both')
 frame_parametros3.pack()
 frame_boton_parametros.pack(fill='both')
 
+#Crea los elementos necesarios
 label_v_0 = tk.Label(frame_parametros, text="V inicial", font=("Leelawadee UI", 14), background="#ffffff")
 v_0 = tk.Entry(frame_parametros)
 v_0.insert(0,'-65')
@@ -209,6 +230,7 @@ label_h_0 = tk.Label(frame_parametros, text="h inicial", font=("Leelawadee UI", 
 h_0 = tk.Entry(frame_parametros)
 h_0.insert(0,'0.65')
 
+#Le asigna una posición a cada elemento
 label_v_0.grid(row=0, column=0, sticky="nw")
 label_n_0.grid(row=1, column=0, sticky="nw")
 label_m_0.grid(row=2, column=0, sticky="nw")
@@ -225,6 +247,7 @@ t_0.insert(0,'6.3')
 label_t_0.pack(anchor=tk.W)
 t_0.pack(anchor=tk.W)
 
+#Variable que contiene el valor q si la corriente es fija y 2 si es continua
 vc = tk.IntVar(value=1)
 
 cb_fija = tk.Radiobutton(frame_parametros2, command=desInter, text="Fija", variable=vc, value=1, font=("Leelawadee UI", 12),
@@ -279,13 +302,13 @@ frame_euler_opciones.pack(fill='both')
 
 photo = tk.PhotoImage(file="images/b_euler_mod.png")
 v_eulermod = tk.IntVar(value=0)
-b_eulermod = tk.Checkbutton(frame_euler_opciones,variable = v_eulermod, onvalue = 1, offvalue = 0, text="euler mod", image=photo)
+b_eulermod = tk.Checkbutton(frame_euler_opciones,variable = v_eulermod, onvalue = 1, offvalue = 0, image=photo, background="#ffffff")
 photo1 = tk.PhotoImage(file="images/b_euler_for.png")
 v_eulerback = tk.IntVar(value=0)
-b_eulerback = tk.Checkbutton(frame_euler_opciones,variable = v_eulerback, onvalue = 1, offvalue = 0,  text="euler back", image=photo1)
+b_eulerback = tk.Checkbutton(frame_euler_opciones,variable = v_eulerback, onvalue = 1, offvalue = 0, image=photo1, background="#ffffff")
 photo2 = tk.PhotoImage(file="images/b_euler_back.png")
 v_eulerfwd = tk.IntVar(value=0)
-b_eulerfwd = tk.Checkbutton(frame_euler_opciones,variable = v_eulerfwd, onvalue = 1, offvalue = 0, text="euler forward", image=photo2)
+b_eulerfwd = tk.Checkbutton(frame_euler_opciones,variable = v_eulerfwd, onvalue = 1, offvalue = 0, image=photo2, background="#ffffff")
 
 
 b_eulermod.grid(row=1, column=0, sticky="nw", padx=2, pady=2)
@@ -301,24 +324,22 @@ plotd(frame_grafica)
 frame_rk_titulo = tk.Frame(frame_derecha, background="#ffffff")
 frame_rk_titulo.pack(fill='both')
 
-label_rk = tk.Label(frame_rk_titulo, text="Métodos de Solución (RK)", font=("Leelawadee UI", 18), background="#ffffff")
+label_rk = tk.Label(frame_rk_titulo, text="Métodos de Solución (RK u Odeint)", font=("Leelawadee UI", 18), background="#ffffff")
 label_rk.pack(anchor=tk.W)
 
 frame_rk_opciones = tk.Frame(frame_derecha, background="#ffffff")
 frame_rk_opciones.pack(fill='both')
 
-# label_odeint = tk.Label(frame_rk_opciones, text="Métodos de Odeint",font=("Leelawadee UI", 18), background="#ffffff")
 photo3 = tk.PhotoImage(file="images/b_rk2.png")
 v_rk2 = tk.IntVar(value=0)
-b_rk2 = tk.Checkbutton(frame_rk_opciones,variable = v_rk2, onvalue = 1, offvalue = 0, text="Runge–Kutta 2do orden", image=photo3)
+b_rk2 = tk.Checkbutton(frame_rk_opciones,variable = v_rk2, onvalue = 1, offvalue = 0, bg = "#ffffff", image=photo3)
 photo4 = tk.PhotoImage(file="images/b_rk4.png")
 v_rk4 = tk.IntVar(value=0)
-b_rk4 = tk.Checkbutton(frame_rk_opciones,variable = v_rk4, onvalue = 1, offvalue = 0, text="Runge–Kutta 4to orden", image=photo4)
+b_rk4 = tk.Checkbutton(frame_rk_opciones,variable = v_rk4, onvalue = 1, offvalue = 0, bg = "#ffffff", image=photo4)
 photo5 = tk.PhotoImage(file="images/b_odeint.png")
 v_odeint = tk.IntVar(value=0)
-b_odeint = tk.Checkbutton(frame_rk_opciones,variable = v_odeint, onvalue = 1, offvalue = 0, text="ODEINT", image=photo5)
+b_odeint = tk.Checkbutton(frame_rk_opciones,variable = v_odeint, onvalue = 1, offvalue = 0, bg = "#ffffff", image=photo5)
 
-# label_odeint.grid(row=0, column=1, sticky="nw", padx=2, pady=2)
 b_rk4.grid(row=1, column=0, sticky="w")
 b_rk2.grid(row=1, column=1, sticky="w")
 b_odeint.grid(row=1, column=2, sticky="w")
