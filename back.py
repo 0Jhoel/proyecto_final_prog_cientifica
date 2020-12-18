@@ -1,7 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize as opt
+from scipy.integrate import odeint
 
+#CONSTANTES
 g_na = 120
 gk = 36
 gl = 0.3
@@ -34,8 +35,10 @@ def Am(V):
     return 0.1 * (V + 40)/(1 - np.exp(-(V + 40)/10))
 
 # Factor de temperatura
-def Phi(T):
-    return 3 ** ((T-6.3)/10)
+def Phi(tt):
+    hh = 3 ** ((10-6.3)/10)
+    print(hh)
+    return hh
 
 # Probabilidad de inactivacion del canal de sodio
 def hFun(V,h,phi):
@@ -242,59 +245,11 @@ def RK4(Vm_0,h_0,m_0,n_0,t,h,phi,I):
 
     return VmRK4
 
-"""
-Esto es para probar
-v_0 = -65
-m_0 = 0.2
-n_0 =0.4
-h_0 = 0.6
-a = iter_RK2(0.01,funcion,v_0,m_0,n_0,h_0)
-print(a[1][:,0])
-plt.plot(a[0], a[1][:,0])
+#Función auxiliar para odeint
+def funcionOdeint(x, t, phi,I):
+    return [Vm(I, x[0], x[3], x[1], x[2]),mFun(x[0],x[1],phi),hFun(x[0],x[2],phi),nFun(x[0],x[3],phi)]
 
-plt.xlabel("t")
-plt.ylabel("$V(t)$")
-plt.show()
-"""
-
-# Setup inicial
-# Definimos un valor para h
-h = 0.01
-# Definimos el tiempo inicial
-to = 0.0
-# Definimos el tiempo final
-tf = 100.0
-# Creamos un arreglo de tiempo con pasos de h
-t = np.arange(to, tf + h, h)
-# h inicial
-h0 = 0.65
-# m inicial
-m0 = 0.05
-# n inicial
-n0 = 0.3
-# V inicial
-V0 = -65
-# Temperatura
-T = 6.3
-Phi = Phi(T)
-# Corriente
-'''I = 120.0 * np.ones(np.size(t))'''
-I = np.zeros(np.size(t))
-r = np.where((t >= to) & (t <= 50))
-I[r] = 50
-r = np.where((t >= 50) & (t <= tf))
-I[r] = 120
-
-# Grafica
-plt.figure()
-plt.plot(t, EulerForward(V0,h0,m0,n0,t,h,Phi,I), "r")
-plt.plot(t, EulerBackward(V0,h0,m0,n0,t,h,Phi,I), "g")
-plt.plot(t, EulerMod(V0,h0,m0,n0,t,h,Phi,I), "m")
-plt.plot(t, RK2(V0,h0,m0,n0,t,h,Phi,I), "orange")
-plt.plot(t, RK4(V0,h0,m0,n0,t,h,Phi,I), "maroon")
-plt.xlabel("t", fontsize=15)
-plt.ylabel("V", fontsize=15)
-plt.legend(["EulerFor","RK2","RK4"], fontsize=12)
-plt.legend(["EulerFor","EulerBackRoot","EulerModRoot","RK2","RK4"], fontsize=12)
-plt.grid(1)
-plt.show()
+#Función odeint
+def funcion_odeint(v0,m0,h0,n0,t,phi,I):
+    var = odeint(funcionOdeint, [v0,m0,h0,n0], t, args=(phi,I[0]))
+    return var[:,0]
