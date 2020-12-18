@@ -18,6 +18,11 @@ T0 = 6.3
 I1 = 50
 I2 = 120
 
+def clearFrame(frame):
+    # destroy all widgets from frame
+    for widget in frame.winfo_children():
+       widget.destroy()
+
 # Deshabilita un intervalo cuando se tiene corriente constante
 def desInter():
     entr_intervalo_1_0.delete(0, tk.END)
@@ -36,8 +41,31 @@ def habInter():
     entr_intervalo_1_1.configure(state=tk.NORMAL)
     entr_intensidad_1.configure(state=tk.NORMAL)
 
+def plotd(master_frame):
+    # the figure that will contain the plot
+    fig = Figure(figsize=(5, 3), dpi=100)
+
+    # Función super básica que se va a mostrar mientras tanto
+    #x = [i for i in range(101)]
+    #y = [i ** 2 for i in range(101)]
+
+    # se crea el plot
+    plot1 = fig.add_subplot(111)
+    y = []
+    x = []
+    plot1.plot(x,y)
+    plt.close()
+    # Esto es para agregar el plot a la interfaz
+    canvas = FigureCanvasTkAgg(fig, master=master_frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    toolbar = NavigationToolbar2Tk(canvas, master_frame)
+    toolbar.update()
+    canvas.get_tk_widget().pack()
+
 # metodo de donde sale la gráfica con la función
 def plot(master_frame, V, m, h, n, t, I, phi):
+    clearFrame(master_frame)
     # the figure that will contain the plot
     fig = Figure(figsize=(5, 3), dpi=100)
 
@@ -48,22 +76,22 @@ def plot(master_frame, V, m, h, n, t, I, phi):
     # se crea el plot
     plot1 = fig.add_subplot(111)
     if v_eulerfwd.get():
-        y = EulerForward(V,h,m,n,t,0.01,phi,I)
-        plot1.plot(t,y)
+        y1 = EulerForward(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t,y1)
     if v_eulerback.get():
-        y = EulerBackward(V,h,m,n,t,0.01,phi,I)
-        plot1.plot(t, y)
+        y2 = EulerBackward(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y2)
     if v_eulermod.get():
-        y = EulerMod(V,h,m,n,t,0.01,phi,I)
-        plot1.plot(t, y)
+        y3 = EulerMod(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y3)
     if v_rk2.get():
-        y = RK2(V,h,m,n,t,0.01,phi,I)
-        plot1.plot(t, y)
+        y4 = RK2(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y4)
     if v_rk4.get():
-        y = RK4(V,h,m,n,t,0.01,phi,I)
-        plot1.plot(t, y)
+        y5 = RK4(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y5)
     #plot1.plot(x, y)
-
+    plt.close()
     # Esto es para agregar el plot a la interfaz
     canvas = FigureCanvasTkAgg(fig, master=master_frame)
     canvas.draw()
@@ -256,7 +284,7 @@ photo1 = tk.PhotoImage(file="images/b_euler_for.png")
 v_eulerback = tk.IntVar(value=0)
 b_eulerback = tk.Checkbutton(frame_euler_opciones,variable = v_eulerback, onvalue = 1, offvalue = 0,  text="euler back", image=photo1)
 photo2 = tk.PhotoImage(file="images/b_euler_back.png")
-v_eulerfwd = tk.IntVar(value=1)
+v_eulerfwd = tk.IntVar(value=0)
 b_eulerfwd = tk.Checkbutton(frame_euler_opciones,variable = v_eulerfwd, onvalue = 1, offvalue = 0, text="euler forward", image=photo2)
 
 
@@ -267,7 +295,7 @@ b_eulerfwd.grid(row=1, column=2, sticky="nw", padx=2, pady=2)
 # Aquí se crea un frame que contenga la gráfica
 frame_grafica = tk.Frame(frame_derecha, background="#ffffff")
 frame_grafica.pack(fill='both')
-pri()
+plotd(frame_grafica)
 
 # de aquí para abajo vienen los botones con los métodos de RK y Odeint
 frame_rk_titulo = tk.Frame(frame_derecha, background="#ffffff")
