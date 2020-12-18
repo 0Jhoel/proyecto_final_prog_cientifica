@@ -42,12 +42,27 @@ def plot(master_frame, V, m, h, n, t, I, phi):
     fig = Figure(figsize=(5, 3), dpi=100)
 
     # Función super básica que se va a mostrar mientras tanto
-    x = [i for i in range(101)]
-    y = [i ** 2 for i in range(101)]
+    #x = [i for i in range(101)]
+    #y = [i ** 2 for i in range(101)]
 
     # se crea el plot
     plot1 = fig.add_subplot(111)
-    plot1.plot(x, y)
+    if v_eulerfwd.get():
+        y = EulerForward(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t,y)
+    if v_eulerback.get():
+        y = EulerBackward(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y)
+    if v_eulermod.get():
+        y = EulerMod(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y)
+    if v_rk2.get():
+        y = RK2(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y)
+    if v_rk4.get():
+        y = RK4(V,h,m,n,t,0.01,phi,I)
+        plot1.plot(t, y)
+    #plot1.plot(x, y)
 
     # Esto es para agregar el plot a la interfaz
     canvas = FigureCanvasTkAgg(fig, master=master_frame)
@@ -235,11 +250,15 @@ frame_euler_opciones = tk.Frame(frame_derecha, background="#ffffff")
 frame_euler_opciones.pack(fill='both')
 
 photo = tk.PhotoImage(file="images/b_euler_mod.png")
-b_eulermod = tk.Checkbutton(frame_euler_opciones, text="euler mod", image=photo)
+v_eulermod = tk.IntVar(value=0)
+b_eulermod = tk.Checkbutton(frame_euler_opciones,variable = v_eulermod, onvalue = 1, offvalue = 0, text="euler mod", image=photo)
 photo1 = tk.PhotoImage(file="images/b_euler_for.png")
-b_eulerback = tk.Checkbutton(frame_euler_opciones, text="euler back", image=photo1)
+v_eulerback = tk.IntVar(value=0)
+b_eulerback = tk.Checkbutton(frame_euler_opciones,variable = v_eulerback, onvalue = 1, offvalue = 0,  text="euler back", image=photo1)
 photo2 = tk.PhotoImage(file="images/b_euler_back.png")
-b_eulerfwd = tk.Checkbutton(frame_euler_opciones, text="euler forward", image=photo2)
+v_eulerfwd = tk.IntVar(value=1)
+b_eulerfwd = tk.Checkbutton(frame_euler_opciones,variable = v_eulerfwd, onvalue = 1, offvalue = 0, text="euler forward", image=photo2)
+
 
 b_eulermod.grid(row=1, column=0, sticky="nw", padx=2, pady=2)
 b_eulerback.grid(row=1, column=1, sticky="nw", padx=2, pady=2)
@@ -262,11 +281,14 @@ frame_rk_opciones.pack(fill='both')
 
 # label_odeint = tk.Label(frame_rk_opciones, text="Métodos de Odeint",font=("Leelawadee UI", 18), background="#ffffff")
 photo3 = tk.PhotoImage(file="images/b_rk2.png")
-b_rk2 = tk.Checkbutton(frame_rk_opciones, text="Runge–Kutta 2do orden", image=photo3)
+v_rk2 = tk.IntVar(value=0)
+b_rk2 = tk.Checkbutton(frame_rk_opciones,variable = v_rk2, onvalue = 1, offvalue = 0, text="Runge–Kutta 2do orden", image=photo3)
 photo4 = tk.PhotoImage(file="images/b_rk4.png")
-b_rk4 = tk.Checkbutton(frame_rk_opciones, text="Runge–Kutta 4to orden", image=photo4)
+v_rk4 = tk.IntVar(value=0)
+b_rk4 = tk.Checkbutton(frame_rk_opciones,variable = v_rk4, onvalue = 1, offvalue = 0, text="Runge–Kutta 4to orden", image=photo4)
 photo5 = tk.PhotoImage(file="images/b_odeint.png")
-b_odeint = tk.Checkbutton(frame_rk_opciones, text="ODEINT", image=photo5)
+v_odeint = tk.IntVar(value=0)
+b_odeint = tk.Checkbutton(frame_rk_opciones,variable = v_odeint, onvalue = 1, offvalue = 0, text="ODEINT", image=photo5)
 
 # label_odeint.grid(row=0, column=1, sticky="nw", padx=2, pady=2)
 b_rk4.grid(row=1, column=0, sticky="w")
